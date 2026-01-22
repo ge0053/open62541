@@ -8,7 +8,7 @@ manifest:
       repo-path: zephyr
       # Choose a Zephyr revision that you know contains adi_eval_adin1110ebz.
       # Common choices: a released tag (e.g. v3.5.0) or main.
-      revision: main
+      revision: v4.3.0
       import: true
 
 
