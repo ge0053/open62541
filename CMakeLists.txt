@@ -1022,12 +1022,12 @@ if(UA_ARCHITECTURE_ZEPHYR)
     list(APPEND plugin_sources
          ${PROJECT_SOURCE_DIR}/arch/common/timer.h
          ${PROJECT_SOURCE_DIR}/arch/common/timer.c
-         ${PROJECT_SOURCE_DIR}/zephyr/clock_zephyr.c
+         ${PROJECT_SOURCE_DIR}/arch/zephyr/clock_zephyr.c
          ${PROJECT_SOURCE_DIR}/arch/common/eventloop_common.h
          ${PROJECT_SOURCE_DIR}/arch/common/eventloop_common.c
-         ${PROJECT_SOURCE_DIR}/zephyr/eventloop_zephyr.h
-         ${PROJECT_SOURCE_DIR}/zephyr/eventloop_zephyr.c
-         ${PROJECT_SOURCE_DIR}/zephyr/eventloop_zephyr_tcp.c)
+         ${PROJECT_SOURCE_DIR}/arch/zephyr/eventloop_zephyr.h
+         ${PROJECT_SOURCE_DIR}/arch/zephyr/eventloop_zephyr.c
+         ${PROJECT_SOURCE_DIR}/arch/zephyr/eventloop_zephyr_tcp.c)
 endif()
 
 if(UA_ARCHITECTURE_LWIP)
