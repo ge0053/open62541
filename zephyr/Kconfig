@@ -5,7 +5,6 @@ menuconfig OPEN62541
     help
         This option enables OPC UA support
 
-if OPEN62541
 config OPEN62541_ENABLE_AMALGAMATION
     bool "Enable amalgamation"
     default n
@@ -65,7 +64,7 @@ config OPEN62541_ENABLE_DATATYPES_ALL
     bool "Enable all data types"
     default y
     help
-        Generate all datatypes for namespace zero (uses more binary space)
+        "Generate all datatypes for namespace zero (uses more binary space)"
 config OPEN62541_ENABLE_SUBSCRIPTIONS_ALARMS_CONDITIONS
     bool "Enable subscription alaram conditions"
     default n
@@ -185,4 +184,3 @@ config OPEN62541_NAMESPACE_ZERO
     default "REDUCED"
     help
         Completeness of the generated namespace zero (minimal/reduced/full)
-endif
