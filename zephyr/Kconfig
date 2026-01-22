@@ -64,7 +64,7 @@ config OPEN62541_ENABLE_DATATYPES_ALL
     bool "Enable all data types"
     default y
     help
-        "Generate all datatypes for namespace zero (uses more binary space)"
+        Generate all datatypes for namespace zero (uses more binary space)
 config OPEN62541_ENABLE_SUBSCRIPTIONS_ALARMS_CONDITIONS
     bool "Enable subscription alaram conditions"
     default n
