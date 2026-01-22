@@ -1,4 +1,7 @@
 message(STATUS "-------------------------------------------------")
+message(STATUS ${CONFIG_OPEN62541})
+message(STATUS ${OPEN62541})
+
 if(CONFIG_OPEN62541)
 message(STATUS "compiling with zephyr correctly")
     set(UA_ARCHITECTURE "zephyr" CACHE STRING "" FORCE)
