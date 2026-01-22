@@ -7,6 +7,8 @@ west init -l server
 west update
 # Build the native sim executable
 cd server
+# for 64-bit systems:
+# west build -p -b native_sim/native/64 
 west build -p -b native_sim
 # Setup host side ethernet interface (see
 # https://github.com/zephyrproject-rtos/net-tools or

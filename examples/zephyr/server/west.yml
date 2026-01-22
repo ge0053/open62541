@@ -1,13 +1,14 @@
 manifest:
-  version: 1.2
   remotes:
-    - name: ncs
-      url-base: https://github.com/nrfconnect
-
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
   projects:
-    - name: nrf
-      remote: ncs
-      repo-path: sdk-nrf
-      revision: v2.7.0
+    - name: zephyr
+      remote: zephyrproject-rtos
+      repo-path: zephyr
+      # Choose a Zephyr revision that you know contains adi_eval_adin1110ebz.
+      # Common choices: a released tag (e.g. v3.5.0) or main.
+      revision: main
       import: true
+
 
