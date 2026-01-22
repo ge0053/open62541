@@ -1,5 +1,6 @@
-
+message(STATUS "-------------------------------------------------")
 if(CONFIG_OPEN62541)
+message(STATUS "compiling with zephyr correctly")
     set(UA_ARCHITECTURE "zephyr" CACHE STRING "" FORCE)
     macro(open62541_translate_zephyr_bool_option name option)
         set(${name} 0 CACHE STRING "" FORCE)
