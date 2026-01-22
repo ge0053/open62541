@@ -1,7 +1,7 @@
 menuconfig OPEN62541
     bool "Enable open62541"
     default n
-    depends on EVENTFD && NET_TCP
+    depends on NET_TCP
     help
         This option enables OPC UA support
 
