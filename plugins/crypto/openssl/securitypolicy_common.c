@@ -37,11 +37,6 @@
 #define SHA1_DIGEST_LENGTH 20          /* 160 bits */
 #define RSA_DECRYPT_BUFFER_LENGTH 2048 /* bytes */
 
-/* Label strings for ECC policies */
-UA_String serverLabel = UA_STRING_STATIC("opcua-server");
-UA_String clientLabel = UA_STRING_STATIC("opcua-client");
-UA_String sessionLabel = UA_STRING_STATIC("opcua-secret");
-
 /* Cast to prevent warnings in LibreSSL */
 #define SHA256EVP() ((EVP_MD *)(uintptr_t)EVP_sha256())
 
@@ -1352,6 +1347,203 @@ UA_OpenSSL_LoadLocalCertificate(const UA_ByteString *certificate, UA_ByteString 
     return UA_STATUSCODE_BADINVALIDARGUMENT;
 }
 
+UA_StatusCode
+UA_OpenSSL_setLocalSymSigningKey_generic(const UA_SecurityPolicy *policy,
+                                         void *channelContext,
+                                         const UA_ByteString *key) {
+    if(key == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->localSymSigningKey);
+    return UA_ByteString_copy(key, &cc->localSymSigningKey);
+}
+
+UA_StatusCode
+UA_OpenSSL_setLocalSymEncryptingKey_generic(const UA_SecurityPolicy *policy,
+                                            void *channelContext,
+                                            const UA_ByteString *key) {
+    if(key == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->localSymEncryptingKey);
+    return UA_ByteString_copy(key, &cc->localSymEncryptingKey);
+}
+
+UA_StatusCode
+UA_OpenSSL_setLocalSymIv_generic(const UA_SecurityPolicy *policy,
+                                 void *channelContext,
+                                 const UA_ByteString *iv) {
+    if(iv == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->localSymIv);
+    return UA_ByteString_copy(iv, &cc->localSymIv);
+}
+
+UA_StatusCode
+UA_OpenSSL_setRemoteSymSigningKey_generic(const UA_SecurityPolicy *policy,
+                                          void *channelContext,
+                                          const UA_ByteString *key) {
+    if(key == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->remoteSymSigningKey);
+    return UA_ByteString_copy(key, &cc->remoteSymSigningKey);
+}
+
+UA_StatusCode
+UA_OpenSSL_setRemoteSymEncryptingKey_generic(const UA_SecurityPolicy *policy,
+                                             void *channelContext,
+                                             const UA_ByteString *key) {
+    if(key == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->remoteSymEncryptingKey);
+    return UA_ByteString_copy(key, &cc->remoteSymEncryptingKey);
+}
+
+UA_StatusCode
+UA_OpenSSL_setRemoteSymIv_generic(const UA_SecurityPolicy *policy,
+                                  void *channelContext,
+                                  const UA_ByteString *iv) {
+    if(iv == NULL || channelContext == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_ChannelContext * cc = (openssl_ChannelContext *) channelContext;
+    UA_ByteString_clear(&cc->remoteSymIv);
+    return UA_ByteString_copy(iv, &cc->remoteSymIv);
+}
+
+UA_StatusCode
+UA_OpenSSL_compareCertificate_generic(const UA_SecurityPolicy *policy,
+                                      const void *channelContext,
+                                      const UA_ByteString *certificate) {
+    if(channelContext == NULL || certificate == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    const openssl_ChannelContext *cc =
+        (const openssl_ChannelContext *) channelContext;
+    return UA_OpenSSL_X509_compare(certificate, cc->remoteCertificateX509);
+}
+
+void
+UA_OpenSSL_Policy_clearContext_generic(UA_SecurityPolicy *policy) {
+    if(policy == NULL)
+        return;
+
+    UA_ByteString_clear(&policy->localCertificate);
+    openssl_PolicyContext * ctx = (openssl_PolicyContext *) policy->policyContext;
+    if(ctx == NULL)
+        return;
+
+    EVP_PKEY_free(ctx->localPrivateKey);
+    EVP_PKEY_free(ctx->csrLocalPrivateKey);
+    UA_ByteString_clear(&ctx->localCertThumbprint);
+    UA_free (ctx);
+}
+
+UA_StatusCode
+UA_OpenSSL_Policy_newContext_generic(UA_SecurityPolicy *securityPolicy,
+                                     const UA_ByteString localPrivateKey,
+                                     const UA_Logger *logger) {
+    openssl_PolicyContext *context = (openssl_PolicyContext *)
+        UA_malloc(sizeof(openssl_PolicyContext));
+    if(context == NULL)
+        return UA_STATUSCODE_BADOUTOFMEMORY;
+    context->localPrivateKey = UA_OpenSSL_LoadPrivateKey(&localPrivateKey);
+    if(!context->localPrivateKey) {
+        UA_free(context);
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    }
+
+    context->csrLocalPrivateKey = NULL;
+
+    UA_StatusCode retval =
+        UA_Openssl_X509_GetCertificateThumbprint(&securityPolicy->localCertificate,
+                                                 &context->localCertThumbprint, true);
+    if(retval != UA_STATUSCODE_GOOD) {
+        EVP_PKEY_free(context->localPrivateKey);
+        UA_free(context);
+        return retval;
+    }
+
+    securityPolicy->policyContext = context;
+    return UA_STATUSCODE_GOOD;
+}
+
+UA_StatusCode
+UA_OpenSSL_SecurityPolicy_updateCertificate_generic(UA_SecurityPolicy *securityPolicy,
+                                                    const UA_ByteString newCertificate,
+                                                    const UA_ByteString newPrivateKey) {
+    if(securityPolicy == NULL)
+        return UA_STATUSCODE_BADINTERNALERROR;
+
+    if(securityPolicy->policyContext == NULL)
+        return UA_STATUSCODE_BADINTERNALERROR;
+
+    openssl_PolicyContext *pc =
+        (openssl_PolicyContext *)securityPolicy->policyContext;
+
+    UA_Boolean isLocalKey = false;
+    if(newPrivateKey.length <= 0) {
+        if(UA_CertificateUtils_comparePublicKeys(&newCertificate, &securityPolicy->localCertificate) == 0)
+            isLocalKey = true;
+    }
+
+    UA_ByteString_clear(&securityPolicy->localCertificate);
+
+    UA_StatusCode retval = UA_OpenSSL_LoadLocalCertificate(
+        &newCertificate, &securityPolicy->localCertificate);
+
+    if(retval != UA_STATUSCODE_GOOD)
+        return retval;
+
+    /* Set the new private key */
+    if(newPrivateKey.length > 0) {
+        EVP_PKEY_free(pc->localPrivateKey);
+        pc->localPrivateKey = UA_OpenSSL_LoadPrivateKey(&newPrivateKey);
+    } else {
+        if(!isLocalKey) {
+            EVP_PKEY_free(pc->localPrivateKey);
+            pc->localPrivateKey = pc->csrLocalPrivateKey;
+            pc->csrLocalPrivateKey = NULL;
+        }
+    }
+
+    if(!pc->localPrivateKey) {
+        retval = UA_STATUSCODE_BADNOTSUPPORTED;
+        goto error;
+    }
+
+    UA_ByteString_clear(&pc->localCertThumbprint);
+
+    retval = UA_Openssl_X509_GetCertificateThumbprint(&securityPolicy->localCertificate,
+                                                      &pc->localCertThumbprint, true);
+    if(retval != UA_STATUSCODE_GOOD) {
+        goto error;
+    }
+
+    return retval;
+
+error:
+    UA_LOG_ERROR(securityPolicy->logger, UA_LOGCATEGORY_SECURITYPOLICY,
+                 "Could not update certificate and private key");
+    if(securityPolicy->policyContext != NULL)
+        UA_OpenSSL_Policy_clearContext_generic(securityPolicy);
+    return retval;
+}
+
+UA_StatusCode
+UA_OpenSSL_SecurityPolicy_compareCertThumbprint_generic(const UA_SecurityPolicy *securityPolicy,
+                                                const UA_ByteString *certificateThumbprint) {
+    if(securityPolicy == NULL || certificateThumbprint == NULL)
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    openssl_PolicyContext *pc = (openssl_PolicyContext *)
+                                       securityPolicy->policyContext;
+    if(!UA_ByteString_equal(certificateThumbprint, &pc->localCertThumbprint)) {
+        return UA_STATUSCODE_BADCERTIFICATEINVALID;
+    }
+    return UA_STATUSCODE_GOOD;
+}
+
 #endif
 
 #if defined(UA_ENABLE_ENCRYPTION_OPENSSL)
@@ -1409,7 +1601,11 @@ UA_OpenSSL_ECDH(const int nid,
         goto errout;
     }
 
-#if(OPENSSL_VERSION_NUMBER >= 0x30000000L)
+#if defined(LIBRESSL_VERSION_NUMBER)
+    /* LibreSSL does currently not support TLS-encoded point APIs required for ECDH */
+    ret = UA_STATUSCODE_BADNOTSUPPORTED;
+    goto errout;
+#elif(OPENSSL_VERSION_NUMBER >= 0x30000000L)
     if(EVP_PKEY_set1_encoded_public_key(remotePubKey, keyPublicRemoteEncoded.data,
                                         keyPublicRemoteEncoded.length) <= 0) {
         ret = UA_STATUSCODE_BADINTERNALERROR;
@@ -1592,7 +1788,10 @@ UA_OpenSSL_ECC_DeriveKeys(const int curveID, char *hashAlgorithm,
                           EVP_PKEY *localEphemeralKeyPair,
                           const UA_ByteString *key1, const UA_ByteString *key2,
                           UA_ByteString *out) {
-    UA_StatusCode ret = UA_STATUSCODE_GOOD;
+#if defined(LIBRESSL_VERSION_NUMBER)
+    return UA_STATUSCODE_BADNOTSUPPORTED;
+#endif
+
     UA_ByteString sharedSecret = UA_BYTESTRING_NULL;
     UA_ByteString salt = UA_BYTESTRING_NULL;
 
@@ -1600,27 +1799,30 @@ UA_OpenSSL_ECC_DeriveKeys(const int curveID, char *hashAlgorithm,
      * need to generate the local keys or the remote keys. To figure that out,
      * we compare the public part of localEphemeralKeyPair with key1 and
      * key2. */
-    UA_Byte * keyPubEnc = NULL;
-    size_t keyPubEncSize = 0;
 
     /* Get the local ephemeral public key to use in comparison */
+    UA_Byte *keyPubEnc = NULL;
 #if(OPENSSL_VERSION_NUMBER >= 0x30000000L)
-    keyPubEncSize = EVP_PKEY_get1_encoded_public_key(localEphemeralKeyPair, &keyPubEnc);
+    size_t keyPubEncSize =
+        EVP_PKEY_get1_encoded_public_key(localEphemeralKeyPair, &keyPubEnc);
 #else
-    keyPubEncSize = EVP_PKEY_get1_tls_encodedpoint(localEphemeralKeyPair, &keyPubEnc);
+    size_t keyPubEncSize =
+        EVP_PKEY_get1_tls_encodedpoint(localEphemeralKeyPair, &keyPubEnc);
 #endif
-    if(keyPubEncSize <= 0) {
-        ret = UA_STATUSCODE_BADINTERNALERROR;
-        goto errout;
-    }
+    if(keyPubEncSize <= 0)
+        return UA_STATUSCODE_BADINTERNALERROR;
 
     /* Determine the label for salt generation, remote ephemeral public key for
      * ECDH, and info for HKDF */
     UA_ByteString* label = NULL;
     const UA_ByteString * remoteEphPubKey = NULL;
+    static UA_String serverLabel = UA_STRING_STATIC("opcua-server");
+    static UA_String clientLabel = UA_STRING_STATIC("opcua-client");
+    static UA_String sessionLabel = UA_STRING_STATIC("opcua-secret");
 
     /* (Temporary) measure to signal salt generation for sessions. out should
      * always be allocated before this check, so it shouldn't cause problems. */
+    UA_StatusCode ret = UA_STATUSCODE_GOOD;
     if(out->data[0] == 0x03 && out->data[1] == 0x03 && out->data[2] == 0x04 ) {
         label = &sessionLabel;
         if(applicationType == UA_APPLICATIONTYPE_SERVER) {
@@ -1736,7 +1938,11 @@ UA_OpenSSL_ECC_GenerateKey(const int curveId,
         goto errout;
     }
 
-#if(OPENSSL_VERSION_NUMBER >= 0x30000000L)
+#if defined(LIBRESSL_VERSION_NUMBER)
+    ret = UA_STATUSCODE_BADNOTSUPPORTED;
+    goto errout; /* LibreSSL does currently not support TLS-encoded point APIs
+                  * required for ECDH */
+#elif(OPENSSL_VERSION_NUMBER >= 0x30000000L)
     keyPubEncSize = EVP_PKEY_get1_encoded_public_key(*keyPairOut, &keyPubEnc);
 #else
     keyPubEncSize = EVP_PKEY_get1_tls_encodedpoint(*keyPairOut, &keyPubEnc);

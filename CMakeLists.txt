@@ -122,12 +122,6 @@ option(UA_ENABLE_NODESETLOADER "Enable nodesetLoader public API" OFF)
 option(UA_ENABLE_GDS_PUSHMANAGEMENT "Enable GDS pushManagement support" OFF)
 option(UA_ENABLE_DATATYPES_ALL "Generate all datatypes for namespace zero (uses more binary space)" ON)
 
-option(UA_ENABLE_JSON_ENCODING_LEGACY "Use the old JSON encoding before the v1.05 spec" OFF)
-mark_as_advanced(UA_ENABLE_JSON_ENCODING_LEGACY)
-if(UA_ENABLE_JSON_ENCODING_LEGACY AND NOT UA_ENABLE_JSON_ENCODING)
-    message(FATAL_ERROR "UA_ENABLE_JSON_ENCODING_LEGACY requires UA_ENABLE_JSON_ENCODING also")
-endif()
-
 if(UA_INFORMATION_MODEL_AUTOLOAD AND NOT UA_BUILD_FUZZING)
     set(UA_ENABLE_NODESET_INJECTOR ON)
 endif()
@@ -828,9 +822,9 @@ set(lib_headers ${PROJECT_SOURCE_DIR}/deps/open62541_queue.h
                 ${PROJECT_SOURCE_DIR}/deps/ziptree.h
                 ${PROJECT_SOURCE_DIR}/deps/parse_num.h
                 ${PROJECT_SOURCE_DIR}/src/ua_types_encoding_binary.h
-                ${PROJECT_SOURCE_DIR}/src/util/ua_util_internal.h
                 ${PROJECT_BINARY_DIR}/src_generated/open62541/transport_generated.h
                 ${PROJECT_SOURCE_DIR}/src/ua_securechannel.h
+                ${PROJECT_SOURCE_DIR}/src/util/ua_util_internal.h
                 ${PROJECT_SOURCE_DIR}/src/server/ua_session.h
                 ${PROJECT_SOURCE_DIR}/src/server/ua_subscription.h
                 ${PROJECT_SOURCE_DIR}/src/server/ua_services.h
@@ -850,7 +844,7 @@ set(lib_sources ${PROJECT_SOURCE_DIR}/src/ua_types.c
                 ${PROJECT_BINARY_DIR}/src_generated/open62541/statuscodes.c
                 ${PROJECT_SOURCE_DIR}/src/util/ua_util.c
                 ${PROJECT_SOURCE_DIR}/src/util/ua_types_lex.c
-                ${PROJECT_SOURCE_DIR}/src/util/ua_ecc_encryptedsecret.c
+                ${PROJECT_SOURCE_DIR}/src/util/ua_encryptedsecret.c
                 ${PROJECT_SOURCE_DIR}/src/ua_securechannel.c
                 ${PROJECT_SOURCE_DIR}/src/ua_securechannel_crypto.c
                 # server
@@ -919,8 +913,7 @@ if(UA_ENABLE_JSON_ENCODING)
     list(APPEND lib_headers ${PROJECT_SOURCE_DIR}/deps/cj5.h
                             ${PROJECT_SOURCE_DIR}/src/ua_types_encoding_json.h)
     list(APPEND lib_sources ${PROJECT_SOURCE_DIR}/deps/cj5.c
-                            ${PROJECT_SOURCE_DIR}/src/ua_types_encoding_json.c
-                            ${PROJECT_SOURCE_DIR}/src/ua_types_encoding_json_105.c)
+                            ${PROJECT_SOURCE_DIR}/src/ua_types_encoding_json.c)
     if(UA_ENABLE_PUBSUB)
         list(APPEND lib_sources ${PROJECT_SOURCE_DIR}/src/pubsub/ua_pubsub_networkmessage_json.c)
     endif()
@@ -1003,7 +996,7 @@ set(plugin_sources ${PROJECT_SOURCE_DIR}/plugins/ua_log_stdout.c
                    ${PROJECT_SOURCE_DIR}/plugins/crypto/ua_certificategroup_none.c
                    ${PROJECT_SOURCE_DIR}/plugins/crypto/ua_securitypolicy_none.c)
 
-if(UA_ARCHITECTURE_POSIX OR UA_ARCHITECTURE_WIN32)
+if(UA_ARCHITECTURE_POSIX OR UA_ARCHITECTURE_WIN32 OR UA_ENABLE_AMALGAMATION)
     list(APPEND plugin_sources
          ${PROJECT_SOURCE_DIR}/arch/common/timer.h
          ${PROJECT_SOURCE_DIR}/arch/common/timer.c
