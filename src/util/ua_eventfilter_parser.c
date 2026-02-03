@@ -205,15 +205,15 @@ printOperator(EFParseContext *ctx, UA_ContentFilterElement *elm, Operator *op) {
 static void
 debug_element(Operand *on) {
     if(on->ref)
-        printf("%s: ", on->ref);
+       UA_printf("%s: ", on->ref);
     if(on->type == OT_REF) {
-        printf("-> %s\n", on->operand.ref);
+       UA_printf("-> %s\n", on->operand.ref);
     } else if(on->type == OT_OPERATOR) {
-        printf("Operator %i\n", (int)on->operand.op.filter);
+       UA_printf("Operator %i\n", (int)on->operand.op.filter);
     } else if(on->type == OT_SAO) {
-        printf("SAO\n");
+       UA_printf("SAO\n");
     } else if(on->type == OT_LITERAL) {
-        printf("Literal\n");
+       UA_printf("Literal\n");
     }
 }
 #endif

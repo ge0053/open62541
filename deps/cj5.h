@@ -63,7 +63,7 @@
 //  if(r.error != CJ5_ERROR_NONE) {
 //      if(r.error == CJ5_ERROR_OVERFLOW) {
 //          // you can use r.num_tokens to determine the actual token count and reparse
-//          printf("Error: line: %d, col: %d\n", r.error_line, r.error_code);    
+//         UA_printf("Error: line: %d, col: %d\n", r.error_line, r.error_code);    
 //      }
 //  }
 
