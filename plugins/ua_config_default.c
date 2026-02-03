@@ -53,8 +53,8 @@ static UA_StatusCode
 readPrivateKeyPassword(UA_ByteString *password) {
     /* Read from stdin */
     char buf[256];
-    fputs("Private key requires a password. Enter and press return: ", stdout);
-    char *s = fgets(buf, 256, stdin);
+    UA_fputs("Private key requires a password. Enter and press return: ", stdout);
+    char *s = UA_fgets(buf, 256, stdin);
     if(!s)
         return UA_STATUSCODE_BADINTERNALERROR;
 

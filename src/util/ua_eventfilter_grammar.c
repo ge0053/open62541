@@ -462,7 +462,7 @@ static int yyGrowStack(yyParser *p){
     p->yytos = &p->yystack[idx];
 #ifndef NDEBUG
     if( yyTraceFILE ){
-      fprintf(yyTraceFILE,"%sStack grows from %d to %d entries.\n",
+      UA_fprintf(yyTraceFILE,"%sStack grows from %d to %d entries.\n",
               yyTracePrompt, p->yystksz, newSize);
     }
 #endif
@@ -602,7 +602,7 @@ static void yy_pop_parser_stack(yyParser *pParser){
   yytos = pParser->yytos--;
 #ifndef NDEBUG
   if( yyTraceFILE ){
-    fprintf(yyTraceFILE,"%sPopping %s\n",
+    UA_fprintf(yyTraceFILE,"%sPopping %s\n",
       yyTracePrompt,
       yyTokenName[yytos->major]);
   }
@@ -679,7 +679,7 @@ int UA_EventFilterParseCoverage(FILE *out){
       if( yy_lookahead[i+iLookAhead]!=iLookAhead ) continue;
       if( yycoverage[stateno][iLookAhead]==0 ) nMissed++;
       if( out ){
-        fprintf(out,"State %d lookahead %s %s\n", stateno,
+        UA_fprintf(out,"State %d lookahead %s %s\n", stateno,
                 yyTokenName[iLookAhead],
                 yycoverage[stateno][iLookAhead] ? "ok" : "missed");
       }
@@ -721,7 +721,7 @@ static YYACTIONTYPE yy_find_shift_action(
       if( iFallback!=0 ){
 #ifndef NDEBUG
         if( yyTraceFILE ){
-          fprintf(yyTraceFILE, "%sFALLBACK %s => %s\n",
+          UA_fprintf(yyTraceFILE, "%sFALLBACK %s => %s\n",
              yyTracePrompt, yyTokenName[iLookAhead], yyTokenName[iFallback]);
         }
 #endif
@@ -737,7 +737,7 @@ static YYACTIONTYPE yy_find_shift_action(
         if( yy_lookahead[j]==YYWILDCARD && iLookAhead>0 ){
 #ifndef NDEBUG
           if( yyTraceFILE ){
-            fprintf(yyTraceFILE, "%sWILDCARD %s => %s\n",
+            UA_fprintf(yyTraceFILE, "%sWILDCARD %s => %s\n",
                yyTracePrompt, yyTokenName[iLookAhead],
                yyTokenName[YYWILDCARD]);
           }
@@ -792,7 +792,7 @@ static void yyStackOverflow(yyParser *yypParser){
    UA_EventFilterParseCTX_FETCH
 #ifndef NDEBUG
    if( yyTraceFILE ){
-     fprintf(yyTraceFILE,"%sStack Overflow!\n",yyTracePrompt);
+     UA_fprintf(yyTraceFILE,"%sStack Overflow!\n",yyTracePrompt);
    }
 #endif
    while( yypParser->yytos>yypParser->yystack ) yy_pop_parser_stack(yypParser);
@@ -811,11 +811,11 @@ static void yyStackOverflow(yyParser *yypParser){
 static void yyTraceShift(yyParser *yypParser, int yyNewState, const char *zTag){
   if( yyTraceFILE ){
     if( yyNewState<YYNSTATE ){
-      fprintf(yyTraceFILE,"%s%s '%s', go to state %d\n",
+      UA_fprintf(yyTraceFILE,"%s%s '%s', go to state %d\n",
          yyTracePrompt, zTag, yyTokenName[yypParser->yytos->major],
          yyNewState);
     }else{
-      fprintf(yyTraceFILE,"%s%s '%s', pending reduce %d\n",
+      UA_fprintf(yyTraceFILE,"%s%s '%s', pending reduce %d\n",
          yyTracePrompt, zTag, yyTokenName[yypParser->yytos->major],
          yyNewState - YY_MIN_REDUCE);
     }
@@ -1084,7 +1084,7 @@ static void yy_parse_failed(
   UA_EventFilterParseCTX_FETCH
 #ifndef NDEBUG
   if( yyTraceFILE ){
-    fprintf(yyTraceFILE,"%sFail!\n",yyTracePrompt);
+    UA_fprintf(yyTraceFILE,"%sFail!\n",yyTracePrompt);
   }
 #endif
   while( yypParser->yytos>yypParser->yystack ) yy_pop_parser_stack(yypParser);
@@ -1125,7 +1125,7 @@ static void yy_accept(
   UA_EventFilterParseCTX_FETCH
 #ifndef NDEBUG
   if( yyTraceFILE ){
-    fprintf(yyTraceFILE,"%sAccept!\n",yyTracePrompt);
+    UA_fprintf(yyTraceFILE,"%sAccept!\n",yyTracePrompt);
   }
 #endif
 #ifndef YYNOERRORRECOVERY
@@ -1186,10 +1186,10 @@ void UA_EventFilterParse(
 #ifndef NDEBUG
   if( yyTraceFILE ){
     if( yyact < YY_MIN_REDUCE ){
-      fprintf(yyTraceFILE,"%sInput '%s' in state %d\n",
+      UA_fprintf(yyTraceFILE,"%sInput '%s' in state %d\n",
               yyTracePrompt,yyTokenName[yymajor],yyact);
     }else{
-      fprintf(yyTraceFILE,"%sInput '%s' with pending reduce %d\n",
+      UA_fprintf(yyTraceFILE,"%sInput '%s' with pending reduce %d\n",
               yyTracePrompt,yyTokenName[yymajor],yyact-YY_MIN_REDUCE);
     }
   }
@@ -1206,13 +1206,13 @@ void UA_EventFilterParse(
       if( yyTraceFILE ){
         int yysize = yyRuleInfoNRhs[yyruleno];
         if( yysize ){
-          fprintf(yyTraceFILE, "%sReduce %d [%s]%s, pop back to state %d.\n",
+          UA_fprintf(yyTraceFILE, "%sReduce %d [%s]%s, pop back to state %d.\n",
             yyTracePrompt,
             yyruleno, yyRuleName[yyruleno],
             yyruleno<YYNRULE_WITH_ACTION ? "" : " without external action",
             yypParser->yytos[yysize].stateno);
         }else{
-          fprintf(yyTraceFILE, "%sReduce %d [%s]%s.\n",
+          UA_fprintf(yyTraceFILE, "%sReduce %d [%s]%s.\n",
             yyTracePrompt, yyruleno, yyRuleName[yyruleno],
             yyruleno<YYNRULE_WITH_ACTION ? "" : " without external action");
         }
@@ -1263,7 +1263,7 @@ void UA_EventFilterParse(
 #endif
 #ifndef NDEBUG
       if( yyTraceFILE ){
-        fprintf(yyTraceFILE,"%sSyntax Error!\n",yyTracePrompt);
+        UA_fprintf(yyTraceFILE,"%sSyntax Error!\n",yyTracePrompt);
       }
 #endif
 #ifdef YYERRORSYMBOL
@@ -1293,7 +1293,7 @@ void UA_EventFilterParse(
       if( yymx==YYERRORSYMBOL || yyerrorhit ){
 #ifndef NDEBUG
         if( yyTraceFILE ){
-          fprintf(yyTraceFILE,"%sDiscard input token %s\n",
+          UA_fprintf(yyTraceFILE,"%sDiscard input token %s\n",
              yyTracePrompt,yyTokenName[yymajor]);
         }
 #endif
@@ -1361,12 +1361,12 @@ void UA_EventFilterParse(
   if( yyTraceFILE ){
     yyStackEntry *i;
     char cDiv = '[';
-    fprintf(yyTraceFILE,"%sReturn. Stack=",yyTracePrompt);
+    UA_fprintf(yyTraceFILE,"%sReturn. Stack=",yyTracePrompt);
     for(i=&yypParser->yystack[1]; i<=yypParser->yytos; i++){
-      fprintf(yyTraceFILE,"%c%s", cDiv, yyTokenName[i->major]);
+      UA_fprintf(yyTraceFILE,"%c%s", cDiv, yyTokenName[i->major]);
       cDiv = ' ';
     }
-    fprintf(yyTraceFILE,"]\n");
+    UA_fprintf(yyTraceFILE,"]\n");
   }
 #endif
   return;
