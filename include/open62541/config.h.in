@@ -352,13 +352,14 @@ extern UA_THREAD_LOCAL void * (*UA_reallocSingleton)(void *ptr, size_t size);
 #   define UA_malloc k_malloc
 #   define UA_calloc k_calloc
 #   define UA_realloc k_realloc
+#   define UA_printf printk
 #  else
 #   include <stdlib.h>
 #   define UA_free free
 #   define UA_malloc malloc
 #   define UA_calloc calloc
 #   define UA_realloc realloc
-#   define UA_printf printk
+#   define UA_printf printf
 #  endif
 # else
 #  include <stdlib.h>
@@ -366,6 +367,7 @@ extern UA_THREAD_LOCAL void * (*UA_reallocSingleton)(void *ptr, size_t size);
 #  define UA_malloc malloc
 #  define UA_calloc calloc
 #  define UA_realloc realloc
+#   define UA_printf printf
 # endif /*UA_ARCHITECTURE_ZEPHYR*/
 #endif
 
