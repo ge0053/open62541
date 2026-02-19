@@ -358,6 +358,7 @@ extern UA_THREAD_LOCAL void * (*UA_reallocSingleton)(void *ptr, size_t size);
 #   define UA_malloc malloc
 #   define UA_calloc calloc
 #   define UA_realloc realloc
+#   define UA_printf printk
 #  endif
 # else
 #  include <stdlib.h>
