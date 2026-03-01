@@ -277,17 +277,17 @@ START_TEST(Client_reconnect) {
 
 #if 0
     printf("Restart server to test reconnect\n");
-    fflush(stdout);
+    UA_flush(stdout);
     teardown();
     setup();
 
     printf("Read attribute with closed connection\n");
-    fflush(stdout);
+    UA_flush(stdout);
     retval = UA_Client_readValueAttribute(client, nodeId, &val);
     ck_assert_uint_eq(retval, UA_STATUSCODE_BADCONNECTIONCLOSED);
 
     printf("Reconnect client \n");
-    fflush(stdout);
+    UA_flush(stdout);
     retval = UA_Client_connect(client, "opc.tcp://localhost:4840");
     ck_assert_msg(retval == UA_STATUSCODE_GOOD, UA_StatusCode_name(retval));
 
@@ -296,13 +296,13 @@ START_TEST(Client_reconnect) {
     ck_assert_int_eq(ss, UA_SESSIONSTATE_ACTIVATED);
 
     printf("Read attribute again\n");
-    fflush(stdout);
+    UA_flush(stdout);
     retval = UA_Client_readValueAttribute(client, nodeId, &val);
     ck_assert_uint_eq(retval, UA_STATUSCODE_GOOD);
     UA_Variant_clear(&val);
 
     printf("Finish up\n");
-    fflush(stdout);
+    UA_flush(stdout);
 #endif
 
     UA_Client_disconnect(client);

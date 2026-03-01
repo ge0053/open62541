@@ -50,4 +50,31 @@ if(CONFIG_OPEN62541)
     open62541_translate_zephyr_bool_option(UA_DEBUG_FILE_LINE_INFO CONFIG_OPEN62541_DEBUG_FILE_LINE_INFO)
     open62541_translate_zephyr_param_option(UA_MULTITHREADING CONFIG_OPEN62541_MULTITHREADING)
     open62541_translate_zephyr_param_option(UA_NAMESPACE_ZERO CONFIG_OPEN62541_NAMESPACE_ZERO)
+
+    if(DEFINED ${CONFIG_OPEN62541_LOGLEVEL})
+        zephyr_library_compile_definitions(    UA_LOGLEVEL=CONFIG_OPEN62541_LOGLEVEL)
+    endif()
+    if(DEFINED CONFIG_OPEN62541_PROFILE_POSIX)
+    # do nothing
+    elseif(DEFINED CONFIG_OPEN62541_PROFILE_ZEPHYR)
+    # link special 
+        if(ZEPHYR_VERSION_MAJOR LESS 4 AND ZEPHYR_VERSION_MINOR LESS 7)
+        # some nececary posix functions do not exist.
+        endif()
+        zephyr_library_compile_definitions(
+            #use printk instead of printf
+            "UA_printf(...)=printk(__VA_ARGS__)"
+            "UA_fflush(...)= " #fflush not needed
+
+            #use k_malloc instead of malloc
+            "UA_malloc=k_malloc"
+            "UA_free=k_free"
+            "UA_malloc=k_malloc"
+            "UA_calloc=k_calloc"
+            "UA_realloc=k_realloc"
+            "UA_printf=printk"
+        )
+    else()
+    # do nothing
+    endif()
 endif()

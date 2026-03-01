@@ -82,7 +82,7 @@ cliLog(void *context, UA_LogLevel level, UA_LogCategory category,
     fprintf(stderr, "%s/%s" ANSI_COLOR_RESET "\t",
            logLevelNames[l], logCategoryNames[category]);
     fprintf(stderr, "%s\n", logbuf);
-    fflush(stderr);
+    UA_flush(stderr);
 }
 
 static UA_Logger stderrLog = {cliLog, NULL, NULL};

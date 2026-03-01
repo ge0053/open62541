@@ -185,4 +185,9 @@ config OPEN62541_NAMESPACE_ZERO
     default "REDUCED"
     help
         Completeness of the generated namespace zero (minimal/reduced/full)
+config OPEN62541_LOGLEVEL
+    string "log level"
+    default "100"
+    help
+        log level used by open62541. uses the loglevel scheme which open62541 defines.
 endif
