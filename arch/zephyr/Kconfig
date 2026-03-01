@@ -190,4 +190,19 @@ config OPEN62541_LOGLEVEL
     default "100"
     help
         log level used by open62541. uses the loglevel scheme which open62541 defines.
+config CONFIG_OPEN62541_PROFILE_POSIX
+    bool "use posix functions"
+    default n
+    depends on !CONFIG_OPEN62541_PROFILE_ZEPHYR
+    help
+        use posix functions.
+config CONFIG_OPEN62541_PROFILE_ZEPHYR
+    bool "Enable all data types"
+    depends on !CONFIG_OPEN62541_PROFILE_POSIX
+
+    default n
+    help
+        try to use zephyr variants of functions. may not be available for all versions of zephyr.
+
+
 endif
