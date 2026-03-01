@@ -191,7 +191,7 @@ config OPEN62541_LOGLEVEL
     help
         log level used by open62541. uses the loglevel scheme which open62541 defines.
 
-config CONFIG_OPEN62541_PROFILE_ZEPHYR
+config OPEN62541_PROFILE_ZEPHYR
     bool "Enable all data types"
     default n
     help
