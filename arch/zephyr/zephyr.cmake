@@ -54,9 +54,7 @@ if(CONFIG_OPEN62541)
     if(DEFINED ${CONFIG_OPEN62541_LOGLEVEL})
         zephyr_library_compile_definitions(    UA_LOGLEVEL=CONFIG_OPEN62541_LOGLEVEL)
     endif()
-    if(DEFINED CONFIG_OPEN62541_PROFILE_POSIX)
-    # do nothing
-    elseif(DEFINED CONFIG_OPEN62541_PROFILE_ZEPHYR)
+    if(DEFINED CONFIG_OPEN62541_PROFILE_ZEPHYR)
     # link special 
         if(ZEPHYR_VERSION_MAJOR LESS 4 AND ZEPHYR_VERSION_MINOR LESS 7)
         # some nececary posix functions do not exist.
