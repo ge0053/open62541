@@ -12,6 +12,8 @@
  *    Copyright 2018 (c) Fabian Arndt, Root-Core
  *    Copyright 2017-2020 (c) HMS Industrial Networks AB (Author: Jonas Green)
  *    Copyright 2020-2022 (c) Christian von Arnim, ISW University of Stuttgart  (for VDW and umati)
+ *    Copyright 2025 (c) o6 Automation GmbH (Author: Julius Pfrommer)
+ *    Copyright 2025-2026 (c) o6 Automation GmbH (Author: Andreas Ebner)
  */
 
 #ifndef UA_SERVER_H_
@@ -1118,6 +1120,50 @@ UA_Server_addDataTypeNode(UA_Server *server,
                           void *nodeContext, UA_NodeId *outNewNodeId);
 
 /**
+ * Due to the history of development, the DataTypeAttributes structure used in
+ * the AddNodes Service does not describe the layout of the DataType. But the
+ * (newer) structures for describing DataTypes do:
+ *
+ * - SimpleTypeDescription
+ * - EnumDescription
+ * - StructureDescription
+ *
+ * The ``UA_Server_addDataTypeFromDescription`` function translates the
+ * DataTypeDescription into a UA_DataType structure and adds it to an internal
+ * array of the server. Then the DataType is automatically decoded in messages
+ * received by the server. Also the ``DataTypeDefinition`` attribute of the
+ * corresponding DataTypeNode can then be read via the Read service.
+ *
+ * The memory layout of the internally generated ``UA_DataType`` corresponds to
+ * the matching C-structure including padding.
+ *
+ * Note that a DataTypeDescription can be added only once during the lifetime of
+ * the server. This protects against existing instances of the DataType to
+ * having their layout changed. */
+
+/* Use the DataType description to create an internal UA_DataType entry in the
+ * server */
+UA_EXPORT UA_THREADSAFE UA_StatusCode
+UA_Server_addDataTypeFromDescription(UA_Server *server,
+                                     const UA_ExtensionObject *description);
+
+/* The same as UA_Server_addDataTypeFromDescription, but with the description
+ * already converted into a UA_DataType. Makes a copy of the UA_DataType
+ * internally. */
+UA_EXPORT UA_THREADSAFE UA_StatusCode
+UA_Server_addDataType(UA_Server *server, const UA_NodeId parentNodeId,
+                      const UA_DataType *type);
+
+/* Get the entry to the linked list of custom datatypes. This includes both the
+ * datatypes from serverConfig->customDataTypes and the internal custom data
+ * types from UA_Server_addDataType.
+ *
+ * Attention! The output pointer is only valid until the next call to
+ * UA_Server_addDataType. */
+UA_EXPORT UA_THREADSAFE const UA_DataTypeArray *
+UA_Server_getDataTypes(UA_Server *server);
+
+/**
  * ViewNode
  * ~~~~~~~~ */
 
@@ -1975,6 +2021,93 @@ UA_Server_readObjectProperty(UA_Server *server, const UA_NodeId objectId,
                              UA_Variant *value);
 
 /**
+ * Role-Based Access Control (RBAC) - Type Definitions
+ * ====================================================
+ *
+ * Role-Based Access Control implementation per OPC UA Part 18.
+ *
+ * **WARNING**: This feature is EXPERIMENTAL and NOT FOR PRODUCTION USE.
+ * The RBAC implementation is under active development and the API may change.
+ * Use only for testing and development purposes.
+ *
+ * RBAC allows fine-grained access control by assigning roles to sessions and
+ * defining permissions per role on individual nodes or entire namespaces.
+ */
+
+#ifdef UA_ENABLE_RBAC
+
+/**
+ * UA_RolePermission
+ * -----------------
+ * Maps a single role to its permissions bitmask. Used in the server
+ * configuration to define presets and in the public API to set or query
+ * role permissions on nodes. */
+typedef struct {
+    UA_NodeId roleId;
+    UA_PermissionType permissions;
+} UA_RolePermission;
+
+/**
+ * UA_RolePermissionSet
+ * --------------------
+ * A set of role-permission mappings. Used in the server configuration
+ * to define initial role-permission presets. */
+typedef struct {
+    size_t rolePermissionsSize;
+    UA_RolePermission *rolePermissions;
+} UA_RolePermissionSet;
+
+/* UA_RolePermissionSet Type Management */
+void UA_EXPORT
+UA_RolePermissionSet_init(UA_RolePermissionSet *rps);
+
+void UA_EXPORT
+UA_RolePermissionSet_clear(UA_RolePermissionSet *rps);
+
+UA_StatusCode UA_EXPORT
+UA_RolePermissionSet_copy(const UA_RolePermissionSet *src,
+                          UA_RolePermissionSet *dst);
+
+/**
+ * UA_Role
+ * -------
+ * Represents an OPC UA role with identity mapping rules and optional
+ * application/endpoint restrictions per OPC UA Part 18. */
+typedef struct {
+    UA_NodeId roleId;
+    UA_QualifiedName roleName;              /* BrowseName of the role */
+
+    /* Identity Mapping Rules - determine which sessions get this role */
+    size_t identityMappingRulesSize;
+    UA_IdentityMappingRuleType *identityMappingRules;
+
+    /* Application restrictions  (empty list = ignore) */
+    UA_Boolean applicationsExclude;
+    size_t applicationsSize;
+    UA_String *applications;
+
+    /* Endpoint restrictions (empty list = ignore) */
+    UA_Boolean endpointsExclude;
+    size_t endpointsSize;
+    UA_EndpointType *endpoints;
+} UA_Role;
+
+/* UA_Role Type Management */
+void UA_EXPORT
+UA_Role_init(UA_Role *role);
+
+void UA_EXPORT
+UA_Role_clear(UA_Role *role);
+
+UA_StatusCode UA_EXPORT
+UA_Role_copy(const UA_Role *src, UA_Role *dst);
+
+UA_Boolean UA_EXPORT
+UA_Role_equal(const UA_Role *r1, const UA_Role *r2);
+
+#endif /* UA_ENABLE_RBAC */
+
+/**
  * .. _server-configuration:
  *
  * Server Configuration
@@ -2131,7 +2264,13 @@ struct UA_ServerConfig {
      * Make sure you really need this before enabling plain text passwords. */
     UA_Boolean allowNonePolicyPassword;
 
-    /* Different sets of certificates are trusted for SecureChannel / Session */
+    /* Different sets of certificates are trusted for SecureChannel / Session.
+     * They correspond to the CertificateGroups "DefaultApplicationGroup" and
+     * "DefaultUserTokenGroup" from Part 12.
+     *
+     * If the client authenticates with an X509IdentityToken (ActivateSession
+     * Service), then this certificate is validated with the sessionPKI before
+     * forwarding the token to the AccessControl plugin. */
     UA_CertificateGroup secureChannelPKI;
     UA_CertificateGroup sessionPKI;
 
@@ -2314,6 +2453,31 @@ struct UA_ServerConfig {
     UA_StatusCode (*privateKeyPasswordCallback)(UA_ServerConfig *sc,
                                                 UA_ByteString *password);
 #endif
+
+#ifdef UA_ENABLE_RBAC
+    /* Initial Role-Permission Presets
+     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     * Array of initial role-permission presets. Each entry is a set of
+     * UA_RolePermission mappings that define which roles get which
+     * permissions on nodes that reference this preset.
+     *
+     * During server startup, these presets are copied into the server's
+     * internal role-permissions array. The preset entries form the initial
+     * configuration with the following guarantees:
+     *
+     * - Preset entries are **never deleted** during server runtime.
+     * - Their position (index) in the internal array is **kept stable**,
+     *   ensuring that nodes assigned to a preset continue to reference
+     *   the same configuration throughout the server's lifetime.
+     * - Custom nodestore implementations should be aware of these
+     *   index-stability guarantees when managing node permission storage.
+     *
+     * Additional role-permission sets can be added at runtime through
+     * the server API (UA_Server_setNodeRolePermissions). Runtime entries
+     * may be garbage-collected when no longer referenced by any node. */
+    size_t rolePermissionPresetsSize;
+    UA_RolePermissionSet *rolePermissionPresets;
+#endif
 };
 
 void UA_EXPORT
@@ -2394,6 +2558,81 @@ UA_Server_removeCertificates(UA_Server *server,
                              size_t certificatesSize,
                              const UA_Boolean isTrusted);
 
+/**
+ * Role-Based Access Control (RBAC) - API
+ * =======================================
+ *
+ * **WARNING**: This feature is EXPERIMENTAL and NOT FOR PRODUCTION USE.
+ * The RBAC implementation is under active development and the API may change.
+ * Use only for testing and development purposes.
+ */
+
+#ifdef UA_ENABLE_RBAC
+
+/**
+ * Node Role-Permission Management
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Functions for managing role permissions on individual nodes. */
+
+/* Set role permissions for a node.
+ *
+ * Assigns the given set of role-permission mappings to the specified node.
+ * If an identical permission configuration already exists internally, the
+ * node will reference the existing configuration (deduplication). Otherwise,
+ * a new internal entry is created.
+ *
+ * @param server The server instance
+ * @param nodeId The NodeId of the node
+ * @param rolePermissionsSize Number of role-permission entries
+ * @param rolePermissions Array of role-permission mappings
+ * @param recursive If true, also set for all hierarchically referenced
+ *        child nodes
+ * @return UA_STATUSCODE_GOOD on success */
+UA_StatusCode UA_EXPORT UA_THREADSAFE
+UA_Server_setNodeRolePermissions(UA_Server *server,
+                                 const UA_NodeId nodeId,
+                                 size_t rolePermissionsSize,
+                                 const UA_RolePermission *rolePermissions,
+                                 UA_Boolean recursive);
+
+/* Get the role permissions of a node.
+ *
+ * Returns a copy of the role-permission mappings currently assigned to
+ * the node. The output array and its entries are allocated and must be
+ * freed by the caller.
+ *
+ * If the node has no specific role permissions assigned, the output size
+ * is set to 0 and the output pointer to NULL.
+ *
+ * @param server The server instance
+ * @param nodeId The NodeId of the node
+ * @param rolePermissionsSize Output: number of entries
+ * @param rolePermissions Output: array of role-permission mappings
+ *        (caller must free each entry's roleId and the array itself)
+ * @return UA_STATUSCODE_GOOD on success */
+UA_StatusCode UA_EXPORT UA_THREADSAFE
+UA_Server_getNodeRolePermissions(UA_Server *server,
+                                 const UA_NodeId nodeId,
+                                 size_t *rolePermissionsSize,
+                                 UA_RolePermission **rolePermissions);
+
+/* Remove role permissions from a node.
+ *
+ * Resets the node to have no specific role permissions. Default access
+ * control behavior then applies. The internal reference count for the
+ * previously assigned permission configuration is decremented.
+ *
+ * @param server The server instance
+ * @param nodeId The NodeId of the node
+ * @param recursive If true, also remove from all hierarchically referenced
+ *        child nodes
+ * @return UA_STATUSCODE_GOOD on success */
+UA_StatusCode UA_EXPORT UA_THREADSAFE
+UA_Server_removeNodeRolePermissions(UA_Server *server,
+                                    const UA_NodeId nodeId,
+                                    UA_Boolean recursive);
+
+#endif /* UA_ENABLE_RBAC */
 
 _UA_END_DECLS
 
