@@ -23,6 +23,7 @@
 #include "../ua_types_encoding_binary.h"
 #include "ua_services.h"
 #include "mp_printf.h"
+#include "itoa.h"
 
 #ifdef UA_DEBUG_DUMP_PKGS_FILE
 void UA_debug_dumpCompleteChunk(UA_Server *const server, UA_Connection *const connection,
@@ -680,7 +681,15 @@ createServerSecureChannel(UA_BinaryProtocolManager *bpm, UA_ConnectionManager *c
 static void
 addDiscoveryUrl(UA_Server *server, const UA_String hostname, UA_UInt16 port) {
     char urlstr[1024];
-    mp_snprintf(urlstr, 1024, "opc.tcp://%S:%d", hostname, port);
+    UA_UInt16 urlstr_i=0;
+    //mp_snprintf(urlstr, 1024, "opc.tcp://%S:%d", hostname, port);
+    strcpy(urlstr,"opc.tcp://");
+    urlstr_i+=sizeof("opc.tcp://");
+    urlstr_i+= itoaUnsigned(port, &urlstr[urlstr_i], 10);
+    strcpy(&urlstr[urlstr_i],":");
+    urlstr_i+=1;
+    strcpy(&urlstr[urlstr_i],hostname.data);
+
     UA_String discoveryServerUrl = UA_STRING(urlstr);
 
     /* Check if the ServerUrl is already present in the DiscoveryUrl array.

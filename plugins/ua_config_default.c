@@ -22,7 +22,7 @@
 #include <open62541/plugin/certificategroup_default.h>
 #include <open62541/plugin/securitypolicy_default.h>
 #include <open62541/server_config_default.h>
-
+#include "itoa.h"
 #include "../deps/mp_printf.h"
 
 #include <stdio.h>
@@ -426,8 +426,11 @@ setDefaultConfig(UA_ServerConfig *conf, UA_UInt16 portNumber) {
     /* Listen on all interfaces (also external). This must be the first
      * entry if this is desired. Otherwise some interfaces may be blocked
      * (already in use) with a hostname that is only locally reachable.*/
-    mp_snprintf(serverUrlBuffer[0], sizeof(serverUrlBuffer[0]),
-                "opc.tcp://:%u", portNumber);
+    //mp_snprintf(serverUrlBuffer[0], sizeof(serverUrlBuffer[0]),
+    //            "opc.tcp://:%u", portNumber);
+    memcpy(serverUrlBuffer[0], "opc.tcp://:",sizeof("opc.tcp://:"));
+    itoaUnsigned(portNumber, serverUrlBuffer[0][sizeof("opc.tcp://:")], 10);
+
     serverUrls[serverUrlsSize] = UA_STRING(serverUrlBuffer[0]);
     serverUrlsSize++;
 

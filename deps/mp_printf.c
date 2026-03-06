@@ -602,7 +602,7 @@ format_string_loop(output_t *output, const char *format, va_list args) {
         }
     }
 }
-
+/*
 int
 mp_vsnprintf(char *s, size_t n, const char *format, va_list arg) {
     // Format the string
@@ -627,3 +627,4 @@ mp_snprintf(char *s, size_t n, const char *format, ...) {
     va_end(args);
     return ret;
 }
+*/

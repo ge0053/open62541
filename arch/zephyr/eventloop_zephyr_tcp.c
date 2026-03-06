@@ -9,6 +9,7 @@
 
 #include "open62541/types.h"
 #include "eventloop_zephyr.h"
+#include "itoa.h"
 
 #if defined(UA_ARCHITECTURE_ZEPHYR)
 /* Configuration parameters */
@@ -537,8 +538,8 @@ TCP_registerListenSockets(UA_ZephyrConnectionManager *pcm, const char *hostname,
 
     /* Create a string for the port */
     char portstr[6];
-    mp_snprintf(portstr, sizeof(portstr), "%d", port);
-
+    //mp_snprintf(portstr, sizeof(portstr), "%d", port);
+    itoaUnsigned(port, portstr, 10);
     /* Get all the interface and IPv4/6 combinations for the configured hostname */
     UA_addrinfo hints, *res;
     memset(&hints, 0, sizeof hints);
@@ -769,8 +770,8 @@ TCP_openActiveConnection(UA_ZephyrConnectionManager *pcm, const UA_KeyValueMap *
         UA_KeyValueMap_getScalar(params, tcpConnectionParams[TCP_PARAMINDEX_PORT].name,
                                  &UA_TYPES[UA_TYPES_UINT16]);
     UA_assert(port); /* existence is checked before */
-    mp_snprintf(portStr, UA_MAXPORTSTR_LENGTH, "%d", *port);
-
+    //mp_snprintf(portStr, UA_MAXPORTSTR_LENGTH, "%d", *port);
+    itoaUnsigned(*port, portStr, 10);
     /* Prepare the hostname string */
     const UA_String *addr = (const UA_String*)
         UA_KeyValueMap_getScalar(params, tcpConnectionParams[TCP_PARAMINDEX_ADDR].name,
