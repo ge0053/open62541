@@ -423,8 +423,9 @@ UA_EventLoop_new_Zephyr(const UA_Logger *logger) {
     UA_Timer_init(&el->timer);
 
     /* Set the public EventLoop content */
+    #if UA_LOGLEVEL <= 1000
     el->eventLoop.logger = logger;
-
+    #endif
     el->eventLoop.start = (UA_StatusCode(*)(UA_EventLoop *))UA_EventLoopZephyr_start;
     el->eventLoop.stop = (void (*)(UA_EventLoop *))UA_EventLoopZephyr_stop;
     el->eventLoop.free = (UA_StatusCode(*)(UA_EventLoop *))UA_EventLoopZephyr_free;

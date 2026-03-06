@@ -276,9 +276,10 @@ setDefaultConfig(UA_ServerConfig *conf, UA_UInt16 portNumber) {
         conf->nodestore = UA_Nodestore_ZipTree();
 
     /* Logging */
+    #if UA_LOGLEVEL <= 1000
     if(conf->logging == NULL)
         conf->logging = UA_Log_Stdout_new(UA_LOGLEVEL_INFO);
-
+    #endif
     /* EventLoop */
     if(conf->eventLoop == NULL) {
 #if defined(UA_ARCHITECTURE_ZEPHYR)
