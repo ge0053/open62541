@@ -94,9 +94,9 @@ struct UA_EventLoop {
     /* Configuration
      * ~~~~~~~~~~~~~~~
      * The configuration should be set before the EventLoop is started */
-
+    #if UA_LOGLEVEL <=1000
     const UA_Logger *logger;
-
+    #endif
     /* See the implementation-specific documentation for possible parameters.
      * The params map is cleaned up when the EventLoop is _free'd. */
     UA_KeyValueMap params;

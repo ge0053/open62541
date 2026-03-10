@@ -80,6 +80,7 @@ typedef struct zsock_addrinfo UA_addrinfo;
 typedef struct zsock_pollfd UA_pollfd;
 
 #define UA_clean_errno(STR_FUN) (errno == 0 ? (char *)"None" : (STR_FUN)(errno))
+#if UA_LOGLEVEL <=1000
 #define UA_LOG_SOCKET_ERRNO_WRAP(LOG)                                                    \
     do {                                                                                 \
         char *errno_str = UA_clean_errno(strerror);                                      \
@@ -92,7 +93,10 @@ typedef struct zsock_pollfd UA_pollfd;
         LOG;                                                                             \
         errno = 0;                                                                       \
     } while (0)
-
+#else
+#define UA_LOG_SOCKET_ERRNO_WRAP(...)
+#define UA_LOG_SOCKET_ERRNO_GAI_WRAP(...)
+#endif
 /***********************/
 /* General Definitions */
 /***********************/

@@ -157,7 +157,7 @@ UA_LOG_FATAL(const UA_Logger *logger, UA_LogCategory category, const char *msg, 
     (void) msg;
 #endif
 }
-#else
+#else /*iff UA_LOGLEVEL is set high enough, even the ability to call LOG is disabled*/
 #define UA_LOG_TRACE(...) 
 #define UA_LOG_DEBUG(...) 
 #define UA_LOG_INFO(...) 

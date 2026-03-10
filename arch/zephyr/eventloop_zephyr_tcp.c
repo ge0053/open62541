@@ -903,6 +903,11 @@ static UA_StatusCode
 TCP_openConnection(UA_ConnectionManager *cm, const UA_KeyValueMap *params,
                    void *application, void *context,
                    UA_ConnectionManager_connectionCallback connectionCallback) {
+    #if UA_LOGLEVEL <=1000
+    const UA_Logger *logger = el->eventLoop.logger;
+    #else
+    const UA_Logger *logger = (void*)0;
+    #endif
     UA_ZephyrConnectionManager *pcm = (UA_ZephyrConnectionManager*)cm;
     UA_EventLoopZephyr *el = (UA_EventLoopZephyr*)cm->eventSource.eventLoop;
     UA_LOCK(&el->elMutex);
@@ -917,7 +922,7 @@ TCP_openConnection(UA_ConnectionManager *cm, const UA_KeyValueMap *params,
 
     /* Check the parameters */
     UA_StatusCode res =
-        UA_KeyValueRestriction_validate(el->eventLoop.logger, "TCP",
+        UA_KeyValueRestriction_validate(logger, "TCP",
                                         tcpConnectionParams,
                                         TCP_PARAMETERSSIZE, params);
     if(res != UA_STATUSCODE_GOOD) {
@@ -959,6 +964,11 @@ static UA_StatusCode
 TCP_eventSourceStart(UA_ConnectionManager *cm) {
     UA_ZephyrConnectionManager *pcm = (UA_ZephyrConnectionManager*)cm;
     UA_EventLoopZephyr *el = (UA_EventLoopZephyr*)cm->eventSource.eventLoop;
+    #if UA_LOGLEVEL <=1000
+    const UA_Logger *logger = el->eventLoop.logger;
+    #else
+    const UA_Logger *logger = (void*)0;
+    #endif
     if(!el)
         return UA_STATUSCODE_BADINTERNALERROR;
 
@@ -975,7 +985,7 @@ TCP_eventSourceStart(UA_ConnectionManager *cm) {
 
     /* Check the parameters */
     UA_StatusCode res =
-        UA_KeyValueRestriction_validate(el->eventLoop.logger, "TCP",
+        UA_KeyValueRestriction_validate(logger, "TCP",
                                         tcpManagerParams, TCP_MANAGERPARAMS,
                                         &cm->eventSource.params);
     if(res != UA_STATUSCODE_GOOD)
