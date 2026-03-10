@@ -67,7 +67,7 @@ typedef struct UA_Logger {
 
     void (*clear)(struct UA_Logger *logger); /* Clean up the logger plugin */
 } UA_Logger;
-
+#if UA_LOGLEVEL <= 1000
 static UA_INLINE void
 UA_LOG_TRACE(const UA_Logger *logger, UA_LogCategory category, const char *msg, ...) {
 #if UA_LOGLEVEL <= 100
@@ -157,6 +157,14 @@ UA_LOG_FATAL(const UA_Logger *logger, UA_LogCategory category, const char *msg, 
     (void) msg;
 #endif
 }
+#else
+#define UA_LOG_TRACE(...) 
+#define UA_LOG_DEBUG(...) 
+#define UA_LOG_INFO(...) 
+#define UA_LOG_WARNING(...) 
+#define UA_LOG_ERROR(...) 
+#define UA_LOG_FATAL(...) 
+#endif
 
 _UA_END_DECLS
 
