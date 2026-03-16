@@ -103,7 +103,7 @@ deleteContext_none(const UA_SecurityPolicy *policy, void *channelContext) {
 
 static UA_StatusCode
 setContextValue_none(const UA_SecurityPolicy *policy,
-                     void *channelContext,
+                     const void *channelContext,
                      const UA_ByteString *iv) {
     return UA_STATUSCODE_GOOD;
 }
@@ -145,8 +145,8 @@ UA_SecurityPolicy_None(UA_SecurityPolicy *sp, const UA_ByteString localCertifica
     /* Symmetric Signature */
     UA_SecurityPolicySignatureAlgorithm *symSig = &sp->symSignatureAlgorithm;
     symSig->uri = UA_STRING_NULL;
-    symSig->verify = verify_none;
-    symSig->sign = sign_none;
+    symSig->verify =   setContextValue_none;
+    symSig->sign = setContextValue_none;
     symSig->getLocalSignatureSize = length_none;
     symSig->getRemoteSignatureSize = length_none;
     symSig->getLocalKeyLength = length_none;
@@ -155,8 +155,8 @@ UA_SecurityPolicy_None(UA_SecurityPolicy *sp, const UA_ByteString localCertifica
     /* Symmetric Encryption */
     UA_SecurityPolicyEncryptionAlgorithm *symEnc = &sp->symEncryptionAlgorithm;
     symEnc->uri = UA_STRING_NULL;
-    symEnc->encrypt = encrypt_none;
-    symEnc->decrypt = decrypt_none;
+    symEnc->encrypt = setContextValue_none;
+    symEnc->decrypt = setContextValue_none;
     symEnc->getLocalKeyLength = length_none;
     symEnc->getRemoteKeyLength = length_none;
     symEnc->getRemoteBlockSize = length_none;
@@ -171,7 +171,7 @@ UA_SecurityPolicy_None(UA_SecurityPolicy *sp, const UA_ByteString localCertifica
     sp->certSignatureAlgorithm = sp->asymSignatureAlgorithm;
 
     /* Direct Method Pointers */
-    sp->newChannelContext = newContext_none;
+    sp->newChannelContext = setContextValue_none;
     sp->deleteChannelContext = deleteContext_none;
     sp->setLocalSymEncryptingKey = setContextValue_none;
     sp->setLocalSymSigningKey = setContextValue_none;
@@ -180,11 +180,11 @@ UA_SecurityPolicy_None(UA_SecurityPolicy *sp, const UA_ByteString localCertifica
     sp->setRemoteSymSigningKey = setContextValue_none;
     sp->setRemoteSymIv = setContextValue_none;
     sp->compareCertificate = compareCertificate_none;
-    sp->generateKey = generateKey_none;
+    sp->generateKey = setContextValue_none;
     sp->generateNonce = generateNonce_none;
     sp->nonceLength = 0;
-    sp->makeCertThumbprint = makeThumbprint_none;
-    sp->compareCertThumbprint = compareThumbprint_none;
+    sp->makeCertThumbprint = setContextValue_none;
+    sp->compareCertThumbprint = setContextValue_none;
     sp->updateCertificate = updateCertificate_none;
     sp->createSigningRequest = NULL;
     sp->clear = policy_clear_none;
