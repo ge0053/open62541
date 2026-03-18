@@ -46,6 +46,11 @@ config OPEN62541_ENABLE_DISCOVERY
     default y
     help
         Enable Discovery Service (LDS)
+config  OPEN62541_DISABLE_TIMEZONES
+    bool "Disable timezones"
+    default n
+    help
+        disable use of timezones. no time compensation is done. 
 config OPEN62541_ENABLE_JSON_ENCODING
     bool "Enable JSON encoding"
     default y
