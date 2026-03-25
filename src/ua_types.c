@@ -119,7 +119,9 @@ UA_DataType_clear(UA_DataType *type) {
 #endif
     UA_NodeId_clear(&type->typeId);
     UA_NodeId_clear(&type->binaryEncodingId);
+    #ifdef UA_ENABLE_XML_ENCODING
     UA_NodeId_clear(&type->xmlEncodingId);
+    #endif /*UA_ENABLE_XML_ENCODING*/
     UA_free(type->members);
     memset(type, 0, sizeof(UA_DataType));
 }

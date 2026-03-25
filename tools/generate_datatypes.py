@@ -261,7 +261,7 @@ class CGenerator:
                "    UA_TYPENAME(\"%s\") /* .typeName */\n" % idName + \
                "    " + typeid + ", /* .typeId */\n" + \
                "    " + binaryEncodingId + ", /* .binaryEncodingId */\n" + \
-               "    " + xmlEncodingId + ", /* .xmlEncodingId */\n" + \
+               "    UA_XMLENCODINGID(" + xmlEncodingId + ") /* .xmlEncodingId */\n" + \
                "    sizeof(UA_" + idName + "), /* .memSize */\n" + \
                "    " + self.get_type_kind(datatype) + ", /* .typeKind */\n" + \
                "    " + pointerfree + ", /* .pointerFree */\n" + \

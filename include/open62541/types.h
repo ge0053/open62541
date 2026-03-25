@@ -1032,7 +1032,9 @@ struct UA_DataType {
 #endif
     UA_NodeId typeId;           /* The nodeid of the type */
     UA_NodeId binaryEncodingId; /* NodeId of datatype when encoded as binary */
+#ifdef UA_ENABLE_XML_ENCODING 
     UA_NodeId xmlEncodingId;    /* NodeId of datatype when encoded as XML */
+#endif /*UA_ENABLE_XML_ENCODING*/
     UA_UInt32 memSize     : 16; /* Size of the struct in memory */
     UA_UInt32 typeKind    : 6;  /* Dispatch index for the handling routines */
     UA_UInt32 pointerFree : 1;  /* The type (and its members) contains no
@@ -1487,6 +1489,13 @@ UA_Array_delete(void *p, size_t size, const UA_DataType *type);
 #else
 # define UA_TYPENAME(name)
 #endif
+
+#ifdef UA_ENABLE_XML_ENCODING
+# define UA_XMLENCODINGID(...) __VA_ARGS__
+#else
+# define UA_XMLENCODINGID(...)
+#endif
+
 
 #include <open62541/types_generated.h>
 
