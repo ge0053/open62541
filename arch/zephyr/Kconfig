@@ -185,4 +185,9 @@ config OPEN62541_NAMESPACE_ZERO
     default "REDUCED"
     help
         Completeness of the generated namespace zero (minimal/reduced/full)
+config OPEN62541_ENABLE_AUDITING
+    bool "enable auditing."
+    default y
+    help
+        enables auditing which registers events on the server. see chapter 6.5 in OPC UA Part 4: Services
 endif
